@@ -39,8 +39,10 @@ WebDriverWait(driver, 10).until(
 
 final_list = []
 for wkn in wkns:
-    driver.get("https://www.ariva.de")
-
+    try:
+        driver.get("https://www.ariva.de")
+    except:
+        continue
     try:
         WebDriverWait(driver, 1).until(
             EC.frame_to_be_available_and_switch_to_it((By.ID, "sp_message_iframe_909171"))
@@ -56,13 +58,14 @@ for wkn in wkns:
     except Exception as e:
         print("Fehler beim Finden oder Klicken des Cookie-Buttons:", e)
 
-
-    suchfeld = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.ID, "main-search"))
-    )
-
-    # Suchbegriff in das Suchfeld eingeben
-    suchfeld.send_keys(wkn)
+    try:
+        suchfeld = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.ID, "main-search"))
+        )
+        # Suchbegriff in das Suchfeld eingeben
+        suchfeld.send_keys(wkn)
+    except:
+        continue
 
     try:
         WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, '//*[@id="main-search-search-icon"]'))).click()
@@ -70,16 +73,20 @@ for wkn in wkns:
         print("Suchbutton konnte nicht gedrückt werden!")
         continue
     time.sleep(1)
-    url = driver.current_url[:-6]
-    url_historie = url + "/kurse" + "/historische-kurse"
+    try:
+        url = driver.current_url[:-6]
+        url_historie = url + "/kurse" + "/historische-kurse"
+        driver.get(url_historie)
+        html = driver.page_source
+        soup = BeautifulSoup(html, "html.parser")
+    except:
+        continue
 
-    driver.get(url_historie)
-
-    html = driver.page_source
-    soup = BeautifulSoup(html, "html.parser")
-
-    secu_input = soup.find('input', {'name': 'secu'})
-    secu_id = secu_input.get('value')
+    try:
+        secu_input = soup.find('input', {'name': 'secu'})
+        secu_id = secu_input.get('value')
+    except:
+        continue
 
     # print(soup.select(".snapshotInfo")[1].text.strip().split(":")[2])
     time.sleep(0.5)
@@ -87,6 +94,8 @@ for wkn in wkns:
     final_list.append([wkn, url, url_historie, secu_id])
 
 dataframe = pd.DataFrame(final_list, columns=["WKN", "URL", "URL_Historie", "Secu_ID"])
-folder = os.path.dirname(__file__)
+# folder = os.path.dirname(__file__)
 filename = "Ariva_" + datetime.datetime.strftime(datetime.datetime.now(), "%d.%m.%y_%H%M") + ".csv"
-dataframe.to_csv(os.path.join(folder, filename), sep=";", index = False, encoding = "utf-8")
+#dataframe.to_csv(os.path.join(folder, filename), sep=";", index = False, encoding = "utf-8")
+
+dataframe.to_csv(os.path.join("//Master/F/User/Microsoft Excel/Privat/Börse/Ariva_Names/" + filename), sep=";", index = False, encoding = "utf-8")
