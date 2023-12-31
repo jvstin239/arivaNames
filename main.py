@@ -85,15 +85,19 @@ for wkn in wkns:
     try:
         secu_input = soup.find('input', {'name': 'secu'})
         secu_id = secu_input.get('value')
+        selected_boerse = soup.find('select', {'name': 'boerse_id'}).find('option', selected=True).text.strip()
+        selected_value = soup.find('select', {'name': 'boerse_id'}).find('option', selected=True).get("value")
+        print(selected_boerse)
+        print(selected_value)
     except:
         continue
 
     # print(soup.select(".snapshotInfo")[1].text.strip().split(":")[2])
     time.sleep(0.5)
 
-    final_list.append([wkn, url, url_historie, secu_id])
+    final_list.append([wkn, url, url_historie, secu_id, selected_boerse, selected_value])
 
-dataframe = pd.DataFrame(final_list, columns=["WKN", "URL", "URL_Historie", "Secu_ID"])
+dataframe = pd.DataFrame(final_list, columns=["WKN", "URL", "URL_Historie", "Secu_ID", "Handelsplatz", "Wert"])
 # folder = os.path.dirname(__file__)
 filename = "Ariva_" + datetime.datetime.strftime(datetime.datetime.now(), "%d.%m.%y_%H%M") + ".csv"
 #dataframe.to_csv(os.path.join(folder, filename), sep=";", index = False, encoding = "utf-8")
